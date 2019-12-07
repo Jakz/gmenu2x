@@ -272,7 +272,7 @@ LinkApp::LinkApp(GMenu2X& gmenu2x, string const& linkfile, bool deletable)
 void LinkApp::loadIcon() {
 	if (icon.compare(0, 5, "skin:") == 0) {
 		string linkIcon = gmenu2x.sc.getSkinFilePath(
-				icon.substr(5, string::npos));
+				icon.substr(5));
 		if (!fileExists(linkIcon))
 			searchIcon();
 		else
@@ -294,7 +294,7 @@ const string &LinkApp::searchIcon() {
 	string exectitle = execicon;
 	pos = execicon.rfind("/");
 	if (pos != string::npos)
-		string exectitle = execicon.substr(pos+1,execicon.length());
+		string exectitle = execicon.substr(pos+1);
 
 	if (!gmenu2x.sc.getSkinFilePath("icons/"+exectitle).empty())
 		iconPath = gmenu2x.sc.getSkinFilePath("icons/"+exectitle);

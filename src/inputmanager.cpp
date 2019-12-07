@@ -95,7 +95,7 @@ bool InputManager::readConfFile(const string &conffile) {
 		while (getline(inf, line, '\n')) {
 			string::size_type pos = line.find("=");
 			string name = trim(line.substr(0,pos));
-			line = trim(line.substr(pos+1,line.length()));
+			line = trim(line.substr(pos+1));
 
 			Button button;
 			if (name == "up")            button = UP;
@@ -116,15 +116,15 @@ bool InputManager::readConfFile(const string &conffile) {
 
 			pos = line.find(",");
 			string sourceStr = trim(line.substr(0,pos));
-			line = trim(line.substr(pos+1, line.length()));
+			line = trim(line.substr(pos+1));
 
 			if (sourceStr == "keyboard") {
 				buttonMap[button].kb_mapped = true;
-				buttonMap[button].kb_code = atoi(line.c_str());
+				buttonMap[button].kb_code = std::stoi(line);
 	#ifndef SDL_JOYSTICK_DISABLED
 			} else if (sourceStr == "joystick") {
 				buttonMap[button].js_mapped = true;
-				buttonMap[button].js_code = atoi(line.c_str());
+				buttonMap[button].js_code = std::stoi(line);
 	#endif
 			} else {
 				WARNING("InputManager: Ignoring unknown button source \"%s\"\n",

@@ -14,9 +14,9 @@ Background::Background(GMenu2X& gmenu2x)
 
 void Background::paint(Surface& s) {
 	Font& font = *gmenu2x.font;
-	OffscreenSurface& bgmain = *gmenu2x.bgmain;
+	const auto& bgmain = gmenu2x.bgmain;
 
-	bgmain.blit(s, 0, 0);
+	bgmain->blit(s, 0, 0);
 
 #ifdef ENABLE_CLOCK
 	font.write(s, clock.getTime(),

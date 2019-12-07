@@ -191,12 +191,7 @@ string Font::wordWrapSingleLine(const string &text, size_t start, size_t end, in
 
 int Font::getTextHeight(const string &text) const
 {
-	int nLines = 1;
-	size_t pos = 0;
-	while ((pos = text.find('\n', pos)) != string::npos) {
-		nLines++;
-		pos++;
-	}
+	int nLines = 1 + std::count(text.begin(), text.end(), '\n');
 	return nLines * getLineSpacing();
 }
 

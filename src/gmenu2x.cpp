@@ -215,9 +215,14 @@ GMenu2X::GMenu2X() : input(*this), sc(this)
 
 	SDL_WM_SetCaption("GMenu2X", nullptr);
 
+#if defined(G2X_BUILD_OPTION_SCREEN_WIDTH) && defined(G2X_BUILD_OPTION_SCREEN_HEIGHT)
+	s = OutputSurface::open(G2X_BUILD_OPTION_SCREEN_WIDTH, G2X_BUILD_OPTION_SCREEN_HEIGHT, 32);
+#else
+	// find largest resolution available
 	for (const auto res : supported_resolutions)
-		if (s = OutputSurface::open(res.first, res.second, confInt["videoBpp"]))
+		if (s = OutputSurface::open(res.first, res.second, 32))
 			break;
+#endif
 
 	if (!s) {
 		ERROR("Failed to create main window\n");
@@ -344,7 +349,7 @@ void GMenu2X::initFont() {
 		if (!size)
 			size = 12;
 		if (path.substr(0,5)=="skin:")
-			path = sc.getSkinFilePath(path.substr(5, path.length()));
+			path = sc.getSkinFilePath(path.substr(5));
 		font.reset(new Font(path, size));
 	} else {
 		font = Font::defaultFont();
@@ -436,7 +441,7 @@ void GMenu2X::readConfig(string conffile) {
 		while (getline(inf, line, '\n')) {
 			string::size_type pos = line.find("=");
 			string name = trim(line.substr(0,pos));
-			string value = trim(line.substr(pos+1,line.length()));
+			string value = trim(line.substr(pos+1));
 
 			if (value.length()>1 && value.at(0)=='"' && value.at(value.length()-1)=='"')
 				confStr[name] = value.substr(1,value.length()-2);
@@ -523,7 +528,7 @@ void GMenu2X::readTmp() {
 		while (getline(inf, line, '\n')) {
 			string::size_type pos = line.find("=");
 			string name = trim(line.substr(0,pos));
-			string value = trim(line.substr(pos+1,line.length()));
+			string value = trim(line.substr(pos+1));
 
 			if (name=="section")
 				menu->setSectionIndex(atoi(value.c_str()));
@@ -800,14 +805,14 @@ bool GMenu2X::readSkinConfig(const string& conffile)
 			DEBUG("skinconf: '%s'\n", line.c_str());
 			string::size_type pos = line.find("=");
 			string name = trim(line.substr(0,pos));
-			string value = trim(line.substr(pos+1,line.length()));
+			string value = trim(line.substr(pos+1));
 
 			if (value.length()>0) {
 				if (value.length()>1 && value.at(0)=='"' && value.at(value.length()-1)=='"')
 					skinConfStr[name] = value.substr(1,value.length()-2);
 				else if (value.at(0) == '#')
 					skinConfColors[stringToColor(name)] =
-						RGBAColor::fromString(value.substr(1, value.length()));
+						RGBAColor::fromString(value.substr(1));
 				else
 					skinConfInt[name] = atoi(value.c_str());
 			}

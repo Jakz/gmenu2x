@@ -117,7 +117,7 @@ InputDialog::InputDialog(GMenu2X& gmenu2x, InputManager &inputMgr_,
 }
 
 void InputDialog::setKeyboard(int kb) {
-	kb = constrain(kb, 0, keyboard.size() - 1);
+	kb = std::clamp(kb, 0, (int)keyboard.size() - 1);
 	curKeyboard = kb;
 	this->kb = &(keyboard[kb]);
 	kbLength = this->kb->at(0).length();

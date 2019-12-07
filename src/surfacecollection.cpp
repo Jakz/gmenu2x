@@ -99,7 +99,7 @@ OffscreenSurface *SurfaceCollection::add(const string &path) {
 	string filePath = path;
 
 	if (filePath.substr(0,5)=="skin:") {
-		filePath = getSkinFilePath(filePath.substr(5,filePath.length()));
+		filePath = getSkinFilePath(filePath.substr(5));
 		if (filePath.empty())
 			return NULL;
 	} else if ((filePath.find('#') == filePath.npos) && (!fileExists(filePath))) {

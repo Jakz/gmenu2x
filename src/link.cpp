@@ -124,7 +124,7 @@ const string &Link::getIcon() {
 
 void Link::loadIcon() {
 	if (icon.compare(0, 5, "skin:") == 0) {
-		setIconPath(gmenu2x.sc.getSkinFilePath(icon.substr(5, string::npos)));
+		setIconPath(gmenu2x.sc.getSkinFilePath(icon.substr(5)));
 	}
 }
 
@@ -133,7 +133,7 @@ void Link::setIcon(const string &icon) {
 
 	if (icon.compare(0, 5, "skin:") == 0)
 		this->iconPath = gmenu2x.sc.getSkinFilePath(
-					icon.substr(5, string::npos));
+					icon.substr(5));
 	else
 		this->iconPath = icon;
 

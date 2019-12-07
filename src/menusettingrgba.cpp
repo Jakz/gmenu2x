@@ -111,7 +111,7 @@ bool MenuSettingRGBA::handleButtonPress(InputManager::Button button)
 
 void MenuSettingRGBA::update_value(int value)
 {
-	setSelPart(constrain(getSelPart() + value, 0, 255));
+	setSelPart(std::clamp(getSelPart() + value, 0, 255));
 }
 
 void MenuSettingRGBA::dec()
@@ -126,12 +126,12 @@ void MenuSettingRGBA::inc()
 
 void MenuSettingRGBA::leftComponent()
 {
-	selPart = constrain(selPart-1,0,3);
+	selPart = std::clamp(selPart-1,0,3);
 }
 
 void MenuSettingRGBA::rightComponent()
 {
-	selPart = constrain(selPart+1,0,3);
+	selPart = std::clamp(selPart+1,0,3);
 }
 
 void MenuSettingRGBA::setR(unsigned short r)

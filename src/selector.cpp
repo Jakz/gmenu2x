@@ -94,7 +94,7 @@ int Selector::exec(int startSelection) {
 	bg.convertToDisplayFormat();
 
 	unsigned int firstElement = 0;
-	unsigned int selected = constrain(startSelection, 0, fl.size() - 1);
+	unsigned int selected = std::clamp(startSelection, 0, (int)fl.size() - 1);
 
 	bool close = false, result = true;
 	while (!close) {

@@ -118,6 +118,7 @@ void Menu::readSections(std::string const& parentDir)
 		if (filename[0] != '.')
 			sectionNamed(filename);
 	}
+	//TODO: report anything in case of error?
 }
 
 string Menu::createSectionDir(string const& sectionName)
@@ -364,7 +365,7 @@ void Menu::addActionLink(uint32_t section, string const& title, Action action,
 	link->setDescription(description);
 	if (gmenu2x.sc.exists(icon)
 			|| (icon.substr(0,5)=="skin:"
-				&& !gmenu2x.sc.getSkinFilePath(icon.substr(5,icon.length())).empty())
+				&& !gmenu2x.sc.getSkinFilePath(icon.substr(5)).empty())
 			|| fileExists(icon)) {
 		link->setIcon(icon);
 	}
@@ -385,7 +386,7 @@ bool Menu::addLink(string const& path, string const& file)
 	string title = file;
 	string::size_type pos = title.rfind(".");
 	if (pos!=string::npos && pos>0) {
-		string ext = title.substr(pos, title.length());
+		string ext = title.substr(pos);
 		transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
 		title = title.substr(0, pos);
 	}

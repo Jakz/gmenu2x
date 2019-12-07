@@ -23,6 +23,7 @@
 #include "debug.h"
 #include "imageio.h"
 #include "utilities.h"
+#include "buildopts.h"
 
 #include <algorithm>
 #include <cassert>
@@ -36,13 +37,13 @@ using namespace std;
 
 RGBAColor RGBAColor::fromString(const string &strColor) {
 	return {
-		uint8_t(constrain(strtol(strColor.substr(0, 2).c_str(), nullptr, 16),
+		uint8_t(std::clamp(std::stoi(strColor.substr(0, 2), nullptr, 16),
 		                  0, 255)),
-		uint8_t(constrain(strtol(strColor.substr(2, 2).c_str(), nullptr, 16),
+		uint8_t(std::clamp(std::stoi(strColor.substr(2, 2).c_str(), nullptr, 16),
 		                  0, 255)),
-		uint8_t(constrain(strtol(strColor.substr(4, 2).c_str(), nullptr, 16),
+		uint8_t(std::clamp(std::stoi(strColor.substr(4, 2).c_str(), nullptr, 16),
 		                  0, 255)),
-		uint8_t(constrain(strtol(strColor.substr(6, 2).c_str(), nullptr, 16),
+		uint8_t(std::clamp(std::stoi(strColor.substr(6, 2).c_str(), nullptr, 16),
 		                  0, 255)),
 	};
 }
@@ -339,8 +340,14 @@ unique_ptr<OutputSurface> OutputSurface::open(
 		int width, int height, int bitsPerPixel)
 {
 	SDL_ShowCursor(SDL_DISABLE);
+	Uint32 flags = SDL_HWSURFACE | SDL_DOUBLEBUF;
+
+#if !defined(G2X_BUILD_OPTION_WINDOWED_MODE)
+	flags |= SDL_FULLSCREEN;
+#endif
+
 	SDL_Surface *raw = SDL_SetVideoMode(
-		width, height, bitsPerPixel, SDL_HWSURFACE | SDL_DOUBLEBUF | SDL_FULLSCREEN);
+		width, height, bitsPerPixel, flags);
 	return unique_ptr<OutputSurface>(raw ? new OutputSurface(raw) : nullptr);
 }
 

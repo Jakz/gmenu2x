@@ -186,17 +186,13 @@ string uniquePath(string const& dir, string const& name)
 	return path;
 }
 
-int constrain(int x, int imin, int imax) {
-	return min(imax, max(imin, x));
-}
-
 //Configuration parsing utilities
 int evalIntConf (ConfIntHash& hash, const std::string &key, int def, int imin, int imax) {
 	auto it = hash.find(key);
 	if (it == hash.end()) {
 		return hash[key] = def;
 	} else {
-		return it->second = constrain(it->second, imin, imax);
+		return it->second = std::clamp(it->second, imin, imax);
 	}
 }
 
@@ -239,7 +235,7 @@ string cmdclean (string cmdline) {
 
 int intTransition(int from, int to, long tickStart, long duration, long tickNow) {
 	if (tickNow<0) tickNow = SDL_GetTicks();
-	return constrain(((tickNow-tickStart) * (to-from)) / duration, from, to);
+	return std::clamp((int)(((tickNow-tickStart) * (to-from)) / duration), from, to);
 	//                    elapsed                 increments
 }
 

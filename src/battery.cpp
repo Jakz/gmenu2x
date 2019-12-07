@@ -15,7 +15,7 @@
  */
 unsigned short Battery::getBatteryLevel()
 {
-	unsigned long voltage_min, voltage_max, voltage_now;
+	unsigned long voltage_min = 0, voltage_max = 1, voltage_now = 1;
 	FILE *handle;
 
 	std::string path = powerSupplySysfs + "/status";

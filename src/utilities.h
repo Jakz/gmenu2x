@@ -27,8 +27,8 @@
 
 #include "inputmanager.h"
 
-typedef std::unordered_map<std::string, std::string, std::hash<std::string>> ConfStrHash;
-typedef std::unordered_map<std::string, int, std::hash<std::string>> ConfIntHash;
+using ConfStrHash = std::unordered_map<std::string, std::string>;
+using ConfIntHash = std::unordered_map<std::string, int>;
 
 class case_less {
 public:

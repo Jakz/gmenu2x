@@ -513,9 +513,11 @@ void Menu::deleteSelectedSection()
 	setSectionIndex(0); //reload sections
 
 	string path = GMenu2X::getHome() + "/sections/" + sectionName;
-	if (rmdir(path.c_str()) && errno != ENOENT) {
+
+	std::error_code ec;
+	if (!std::filesystem::remove(path, ec) && ec) {
 		WARNING("Removal of section dir \"%s\" failed: %s\n",
-				path.c_str(), strerror(errno));
+			path.c_str(), ec.message().c_str());
 	}
 }
 

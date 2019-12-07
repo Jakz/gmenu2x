@@ -62,19 +62,17 @@
 #include <SDL.h>
 #include <signal.h>
 
-#include <sys/statvfs.h>
 #include <errno.h>
 
 //for browsing the filesystem
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <dirent.h>
 
 //for soundcard
-#include <sys/ioctl.h>
+/*#include <sys/ioctl.h>
 #include <linux/soundcard.h>
 
-#include <sys/mman.h>
+#include <sys/mman.h>*/
 
 using namespace std;
 
@@ -130,6 +128,8 @@ static void set_handler(int signal, void (*handler)(int))
 	sig.sa_handler = handler;
 	sig.sa_flags |= SA_RESTART;
 	sigaction(signal, &sig, NULL);
+
+	
 }
 
 int main(int /*argc*/, char * /*argv*/[]) {
@@ -145,7 +145,7 @@ int main(int /*argc*/, char * /*argv*/[]) {
 		return 1;
 	}
 
-	gmenu2x_home = (string)home + (string)"/.gmenu2x";
+	gmenu2x_home = (string)home + "/.gmenu2x";
 
 	std::error_code ec;
 	if (!std::filesystem::create_directory(gmenu2x_home, ec) && ec.value()) {
@@ -194,7 +194,7 @@ GMenu2X::GMenu2X() : input(*this), sc(this)
 	 * https://github.com/mthuurne/opendingux-buildroot/blob
 	 * 			/opendingux-2010.11/package/sdl/sdl-fbcon-clear-onexit.patch
 	 */
-	setenv("SDL_FBCON_DONT_CLEAR", "1", 0);
+	setenv("SDL_FBCON_DONT_CLEAR", "1", false);
 
 	if( SDL_Init(SDL_INIT_TIMER) < 0) {
 		ERROR("Could not initialize SDL: %s\n", SDL_GetError());
@@ -962,16 +962,16 @@ void GMenu2X::deleteSection()
 }
 
 string GMenu2X::getDiskFree(const char *path) {
-	string df = "";
-	struct statvfs b;
+	
+	std::error_code ec;
+	auto space = std::filesystem::space(path, ec);
 
-	int ret = statvfs(path, &b);
-	if (ret == 0) {
+	string df = "";
+
+	if (!ec) {
 		// Make sure that the multiplication happens in 64 bits.
-		unsigned long freeMiB =
-				((unsigned long long)b.f_bfree * b.f_bsize) / (1024 * 1024);
-		unsigned long totalMiB =
-				((unsigned long long)b.f_blocks * b.f_frsize) / (1024 * 1024);
+		unsigned long freeMiB = space.free / (1024 * 1024);
+		unsigned long totalMiB = space.capacity / (1024 * 1024);
 		stringstream ss;
 		if (totalMiB >= 10000) {
 			ss << (freeMiB / 1024) << "." << ((freeMiB % 1024) * 10) / 1024 << "/"
@@ -980,7 +980,7 @@ string GMenu2X::getDiskFree(const char *path) {
 			ss << freeMiB << "/" << totalMiB << "MiB";
 		}
 		ss >> df;
-	} else WARNING("statvfs failed with error '%s'.\n", strerror(errno));
+	} else WARNING("statvfs failed with error '%s'.\n", ec.message().c_str());
 	return df;
 }
 

@@ -111,18 +111,13 @@ Menu::~Menu()
 
 void Menu::readSections(std::string const& parentDir)
 {
-	DIR *dirp = opendir(parentDir.c_str());
-	if (!dirp) return;
-
-	struct dirent *dptr;
-	while ((dptr = readdir(dirp))) {
-		if (dptr->d_name[0] != '.' && dptr->d_type == DT_DIR) {
-			// Create section if it doesn't exist yet.
-			sectionNamed(dptr->d_name);
-		}
+	std::error_code ec;
+	for (const auto& entry : std::filesystem::directory_iterator(parentDir, ec))
+	{
+		const auto filename = entry.path().filename().string();
+		if (filename[0] != '.')
+			sectionNamed(filename);
 	}
-
-	closedir(dirp);
 }
 
 string Menu::createSectionDir(string const& sectionName)

@@ -36,9 +36,9 @@ bool InputManager::init(Menu *menu)
 
 	repeatRateChanged();
 
-	for (int i = 0; i < BUTTON_TYPE_SIZE; i++) {
-		buttonMap[i].js_mapped = false;
-		buttonMap[i].kb_mapped = false;
+	for (auto& button : buttonMap) {
+		button.js_mapped = false;
+		button.kb_mapped = false;
 	}
 
 	/* If a user-specified input.conf file exists, we load it;

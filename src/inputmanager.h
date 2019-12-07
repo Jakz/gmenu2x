@@ -24,6 +24,7 @@
 #include <SDL.h>
 #include <string>
 #include <vector>
+#include <array>
 
 #define INPUT_KEY_REPEAT_DELAY 250
 
@@ -77,7 +78,7 @@ private:
 	GMenu2X& gmenu2x;
 	Menu *menu;
 
-	ButtonMapEntry buttonMap[BUTTON_TYPE_SIZE];
+	std::array<ButtonMapEntry, BUTTON_TYPE_SIZE> buttonMap;
 #ifndef SDL_JOYSTICK_DISABLED
 	std::vector<Joystick> joysticks;
 

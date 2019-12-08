@@ -10,6 +10,7 @@
 
 class OffscreenSurface;
 class Surface;
+struct RGBAColor;
 
 /**
  * Wrapper around a TrueType or other FreeType-supported font.
@@ -46,6 +47,9 @@ public:
 	int write(Surface& surface,
 				const std::string &text, int x, int y,
 				HAlign halign = HAlignLeft, VAlign valign = VAlignTop);
+
+	SDL_Surface* render(SDL_Surface* dest, int x, int y, 
+		const std::string& text, RGBAColor fg, RGBAColor bg);
 
 	std::unique_ptr<OffscreenSurface> render(const std::string& text);
 

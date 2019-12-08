@@ -6,6 +6,7 @@
 
 #include <SDL.h>
 #include <SDL_ttf.h>
+#include <SDL_gfxBlitFunc.h>
 
 #include <algorithm>
 #include <cassert>
@@ -229,24 +230,8 @@ int Font::writeLine(Surface& surface, std::string const& text,
 		return 0;
 	}
 
-	switch (valign) {
-	case VAlignTop:
-		break;
-	case VAlignMiddle:
-		y -= lineSpacing / 2;
-		break;
-	case VAlignBottom:
-		y -= lineSpacing;
-		break;
-	}
-
-	SDL_Color color = { 0, 0, 0, 0 };
-	SDL_Surface *s = TTF_RenderUTF8_Blended(font, text.c_str(), color);
-	if (!s) {
-		ERROR("Font rendering failed for text \"%s\"\n", text.c_str());
-		return 0;
-	}
-	const int width = s->w;
+	int width, height;
+	TTF_SizeUTF8(font, text.c_str(), &width, &height);
 
 	switch (halign) {
 	case HAlignLeft:
@@ -259,123 +244,76 @@ int Font::writeLine(Surface& surface, std::string const& text,
 		break;
 	}
 
-	SDL_Rect rect = { (Sint16) x, (Sint16) (y - 1), 0, 0 };
-	SDL_BlitSurface(s, NULL, surface.raw, &rect);
-
-	/* Note: rect.x / rect.y are reset everytime because SDL_BlitSurface
-	 * will modify them if negative */
-	rect.x = x;
-	rect.y = y + 1;
-	SDL_BlitSurface(s, NULL, surface.raw, &rect);
-
-	rect.x = x - 1;
-	rect.y = y;
-	SDL_BlitSurface(s, NULL, surface.raw, &rect);
-
-	rect.x = x + 1;
-	rect.y = y;
-	SDL_BlitSurface(s, NULL, surface.raw, &rect);
-	SDL_FreeSurface(s);
-
-	rect.x = x;
-	rect.y = y;
-	color.r = 0xff;
-	color.g = 0xff;
-	color.b = 0xff;
-
-	s = TTF_RenderUTF8_Blended(font, text.c_str(), color);
-	if (!s) {
-		ERROR("Font rendering failed for text \"%s\"\n", text.c_str());
-		return width;
+	switch (valign) {
+	case VAlignTop:
+		break;
+	case VAlignMiddle:
+		y -= lineSpacing / 2;
+		break;
+	case VAlignBottom:
+		y -= lineSpacing;
+		break;
 	}
-	SDL_BlitSurface(s, NULL, surface.raw, &rect);
-	SDL_FreeSurface(s);
+
+	render(surface.raw, x, y, text, RGBAColor::white(), RGBAColor::black());
 
 	return width;
 }
 
-static inline uint8_t *get_pixel8(SDL_Surface *s, int row, int col)
+SDL_Surface* Font::render(SDL_Surface* surface, int x, int y,
+	const std::string& text, RGBAColor fg, RGBAColor bg)
 {
-	uintptr_t row_addr = (uintptr_t)s->pixels + row * s->pitch;
+	SDL_Surface* s = TTF_RenderUTF8_Blended(font, text.c_str(), fg);
+	if (!s)
+		return surface;
 
-	assert(row < s->h);
-	assert(col < s->w);
+	/* if passed surface is nullptr we ask to the function to generate it,
+	   done to avoid computing length before hand although design is meh
+	*/
+	if (!surface) {
+		surface = SDL_CreateRGBSurface(SDL_SWSURFACE | SDL_SRCALPHA,
+			s->w + 2, s->h + 2, 32,
+#if SDL_BYTEORDER == SDL_BIG_ENDIAN
+			0xff << 8, 0xff << 16, 0xff << 24, 0xff
+#else
+			0xff << 16, 0xff << 8, 0xff, 0xff << 24
+#endif
+		);
+	}
 
-	return (uint8_t *)row_addr + col;
-}
+	using blit_function_t = int (*)(SDL_Surface*, SDL_Rect*, SDL_Surface*, SDL_Rect*);
+	blit_function_t blitFunction = SDL_BlitSurface;
 
-static inline uint32_t *get_pixel32(SDL_Surface *s, int row, int col)
-{
-	uintptr_t row_addr = (uintptr_t)s->pixels + row * s->pitch;
+	if (surface->format->Amask)
+		blitFunction = SDL_gfxBlitRGBA;
+	else
+		blitFunction = SDL_BlitSurface;
+	
 
-	assert(row < s->h);
-	assert(col < s->w);
+	/* render shadow and blit it four times */
+	const int d[][2] = { { -1, 0 }, { 1, 0 }, { 0, -1 }, { 0, 1 } };
+	auto t = TTF_RenderUTF8_Blended(font, text.c_str(), bg);
+	if (!t)
+		return surface;
 
-	return (uint32_t *)row_addr + col;
+	for (size_t i = 0; i < 4; ++i)
+	{
+		SDL_Rect dest = { x + d[i][0], y + d[i][1], 0, 0 };
+		blitFunction(t, nullptr, surface, &dest);
+	}
+
+	/* render text and blit it */
+	SDL_Rect dest = { x,y,0,0 };
+	blitFunction(s, nullptr, surface, &dest);
+
+	SDL_FreeSurface(t);
+	SDL_FreeSurface(s);
+
+	return surface;
 }
 
 std::unique_ptr<OffscreenSurface> Font::render(const std::string& line)
-{
-	SDL_Color color = { 0, 0, 0 };
-	SDL_Surface *s, *raw;
-	unsigned int i, j;
-
-	s = TTF_RenderUTF8_Shaded(font, line.c_str(), color, color);
-	if (!s)
-		return std::unique_ptr<OffscreenSurface>();
-
-	raw = SDL_CreateRGBSurface(SDL_SWSURFACE | SDL_SRCALPHA,
-				   s->w + 2, s->h + 2, 32,
-#if SDL_BYTEORDER == SDL_BIG_ENDIAN
-				   0xff << 8, 0xff << 16, 0xff << 24, 0xff
-#else
-				   0xff << 16, 0xff << 8, 0xff, 0xff << 24
-#endif
-				   );
-
-	for (unsigned int row = 0; row < raw->h; row++) {
-		for (unsigned int col = 0; col < raw->w; col++) {
-			uint8_t center_a, north_a, south_a,
-				east_a, west_a, outline_a;
-
-			if (row > 0 && col > 0 && row <= s->h && col <= s->w)
-				center_a = *get_pixel8(s, row - 1, col - 1);
-			else
-				center_a = 0;
-
-			outline_a = center_a;
-
-			if (row >= 2 && col >= 1 && col <= s->w) {
-				north_a = *get_pixel8(s, row - 2, col - 1);
-				outline_a = std::max(outline_a, north_a);
-			}
-
-			if (row <= s->h - 1 && col >= 1 && col <= s->w) {
-				south_a = *get_pixel8(s, row, col - 1);
-				outline_a = std::max(outline_a, south_a);
-			}
-
-			if (row >= 1 && row <= s->h && col <= s->w - 1) {
-				east_a = *get_pixel8(s, row - 1, col);
-				outline_a = std::max(outline_a, east_a);
-			}
-
-			if (row >= 1 && row <= s->h && col >= 2) {
-				west_a = *get_pixel8(s, row - 1, col - 2);
-				outline_a = std::max(outline_a, west_a);
-			}
-
-			*get_pixel32(raw, row, col) =
-				(center_a << 16) | (center_a << 8) |
-#if SDL_BYTEORDER == SDL_BIG_ENDIAN
-				(center_a << 24) | outline_a;
-#else
-				(outline_a << 24) | center_a;
-#endif
-		}
-	}
-
-	SDL_FreeSurface(s);
-
+{	
+	auto* raw = render(nullptr, 1, 1, line, RGBAColor(255,255,255), RGBAColor(0, 0, 0));
 	return std::unique_ptr<OffscreenSurface>(new OffscreenSurface(raw));
 }

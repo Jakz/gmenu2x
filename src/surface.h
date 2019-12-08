@@ -22,7 +22,6 @@
 #ifndef SURFACE_H
 #define SURFACE_H
 
-#include "font.h"
 
 #include <SDL.h>
 
@@ -40,8 +39,17 @@ struct RGBAColor {
 	Uint32 pixelValue(SDL_PixelFormat *fmt) const {
 		return SDL_MapRGBA(fmt, r, g, b, a);
 	}
+
+	operator SDL_Color() const {
+		return SDL_Color{ r, g, b, a };
+	}
+	
+	static inline RGBAColor white() { return RGBAColor(255, 255, 255); }
+	static inline RGBAColor black() { return RGBAColor(0, 0, 0); }
 };
 std::ostream& operator<<(std::ostream& os, RGBAColor const& color);
+
+#include "font.h"
 
 /**
  * Abstract base class for surfaces; wraps SDL_Surface.

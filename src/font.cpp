@@ -37,7 +37,7 @@ Font::Font(const std::string &path, unsigned int size)
 
 	font = TTF_OpenFont(path.c_str(), size);
 	if (!font) {
-		ERROR("Unable to open font '%s'\n", TTF_FONT);
+		ERROR("Unable to open font '%s'\n", path.c_str());
 		TTF_Quit();
 		return;
 	}
@@ -261,7 +261,7 @@ int Font::writeLine(Surface& surface, std::string const& text,
 }
 
 SDL_Surface* Font::render(SDL_Surface* surface, int x, int y,
-	const std::string& text, RGBAColor fg, RGBAColor bg)
+				const std::string& text, RGBAColor fg, RGBAColor bg)
 {
 	SDL_Surface* s = TTF_RenderUTF8_Blended(font, text.c_str(), fg);
 	if (!s)
@@ -286,9 +286,6 @@ SDL_Surface* Font::render(SDL_Surface* surface, int x, int y,
 
 	if (surface->format->Amask)
 		blitFunction = SDL_gfxBlitRGBA;
-	else
-		blitFunction = SDL_BlitSurface;
-	
 
 	/* render shadow and blit it four times */
 	const int d[][2] = { { -1, 0 }, { 1, 0 }, { 0, -1 }, { 0, 1 } };
@@ -296,8 +293,7 @@ SDL_Surface* Font::render(SDL_Surface* surface, int x, int y,
 	if (!t)
 		return surface;
 
-	for (size_t i = 0; i < 4; ++i)
-	{
+	for (size_t i = 0; i < 4; ++i) {
 		SDL_Rect dest = { x + d[i][0], y + d[i][1], 0, 0 };
 		blitFunction(t, nullptr, surface, &dest);
 	}
